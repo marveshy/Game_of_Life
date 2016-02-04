@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<title> Game of Life </title>
+  	<meta charset="utf-8">
+  </head>
+  <style type="text/css">
+    canvas{
+    	background-color: black;
+    	width:50%;
+    	height:40%;
+    }
+  </style>
+  <body>
+  	<div id="panelGame">
+   <canvas id="myCanvas"> </canvas>
+   </div>
+
+   <div id="MyMenu">
+   </div>
+
+   <button onClick="applyRules()"> apply </button>
+
+   <script>
+   // Draw Tiles in my Canvas
+
+   var position =function position(x,y){
+    this.x = x
+    this.y = y
+    console.log(x,y)
+  }
+
+   var cell= function cell(position,live){ // une cellule est caractérisé par sa position et son statut ( dead or alive)
+      this.position = position
+      this.live=live
+   }
+   
+   var myCanvas= document.getElementById('myCanvas');
+   ctx=myCanvas.getContext('2d'); // dessiner 
+   ctx.strokeStyle='white'; //rectangle couleur blanche
+   ctx.beginPath()
+   var x=0
+   var y= myCanvas.width
+   
+    // tant qu'on est pas sortie du cadre 
+	
+	while(x<=myCanvas.height){
+       x+=5
+     ctx.moveTo(0,x);
+     ctx.lineTo(y,x);
+     ctx.stroke(); // dessiner
+    }
+     x=0
+   var y= myCanvas.height
+    while(x<=myCanvas.width){
+       x+=5
+     ctx.moveTo(x,0);
+     ctx.lineTo(x,y);
+     ctx.stroke();
+    }
+ 
+ // Create cell
+
+  i=0
+  j=0
+ cellule =[] // on cree un tableau des cellules 
+  while(i<=myCanvas.height){
+   j=0;
+    while(j<=myCanvas.width){
+      if(cellule[j]==null)
+        cellule[j]=[] // on cree une nouvelle cellule
+      pos = new position(j,i)
+      cellule[j][i]= new cell(pos,false)
+      console.log(cellule[j][i])
+      j+=5
+    }
+    i+=5
+  }
+  
+  /////  choose randomly center region in canvas
+  // choisir aleatoirement le centre de la region du canvas
+regionX=5*Math.floor((Math.random()*5) + 1)%myCanvas.width;
+regionY=5*Math.floor((Math.random()*5) + 1)%myCanvas.height;
+
+
+// retourner une valeur aleatoire entre min inclusive et max exclusive 
+function getRandomArbitrary(min, max) {
+   return Math.random() * (max - min) + min;
+}
+
+function liveOrNot(){
+  val= getRandomArbitrary(1,5) // avoir une valeur aleatoire entre 1 et  5 
+  if(val > 3)
+    return true ;
+  else
+    return false ;
+}
+
+// create Live neighbours around the center region
+ console.log(getRandomArbitrary(1,5))
+console.log(regionX,regionY)
+console.log(cellule[0]) 
+cellule[regionX][regionY].live=true
+  ctx.fillStyle="yellow"
+ 
+// creer des cellules aleatoirement
+// 8 possibilité
+// x+1,y
+// x+1,y+1
+// x,y+1
+ function neighbours_random_state(){
+cellule[regionX+5][regionY+5].live=liveOrNot()
+cellule[regionX][regionY+5].live=liveOrNot()
+cellule[regionX+5][regionY].live=liveOrNot()
+cellule[regionX-5][regionY-5].live=liveOrNot()
+cellule[regionX-5][regionY].live=liveOrNot()
+cellule[regionX][regionY-5].live=liveOrNot()
+cellule[regionX-5][regionY+5].live=liveOrNot()
+cellule[regionX+5][regionY-5].live=liveOrNot()
+
+}
+
+// appelle de la fonction neighbours_random_state 
+neighbours_random_state() 
+
+ function startGame(){
+  console.log("entrer")
+  i=0
+  // tant qu'on est pas sortie du cadre
+while(i<=myCanvas.height){
+   j=0;
+   
+    while(j<=myCanvas.width){
+      if(cellule[j][i].live==true){
+        ctx.fillStyle="yellow"
+        console.log("true")
+        ctx.fillRect(j,i,5,5)
+      }
+      else{
+        ctx.fillStyle="black"
+        ctx.fillRect(j,i,5,5)
+
+      }
+      j+=5
+    }
+    i+=5
+  }
+
+
+ }
+ startGame()
+
+function check_neighbours_state(cellule_avant,regionX,regionY){
+
+	  var number_of_live_cell=0
+	if(cellule_avant[regionX+5][regionY+5].live) // coordone(x+1,y+1)
+	  number_of_live_cell+=1
+	if(cellule_avant[regionX][regionY+5].live) //coordone(x,y+1)
+	number_of_live_cell+=1
+	if(cellule_avant[regionX+5][regionY].live) // coordone(x+1,y)
+	number_of_live_cell+=1
+	if(regionY!=0)
+	{
+		if(regionX!=0)
+		{
+			if(cellule_avant[regionX-5][regionY-5].live)
+			number_of_live_cell+=1
+		}
+		if(cellule_avant[regionX][regionY-5].live)
+		number_of_live_cell+=1
+		if(cellule_avant[regionX+5][regionY-5].live)
+		number_of_live_cell+=1
+	}
+	if(regionX!=0)
+	{
+		if(cellule_avant[regionX-5][regionY].live)
+		number_of_live_cell+=1
+
+		if(cellule_avant[regionX-5][regionY+5].live)
+		number_of_live_cell+=1
+	}
+
+
+// retunr le nombre de cellulle cumulés
+	return number_of_live_cell
+}
+
+ function applyRules()
+ {
+
+	console.log("entrer")
+	  i=0
+	cellule_avant=cellule
+	console.log(cellule_avant)
+	while(i<myCanvas.height){
+	   j=0;
+	   
+		while(j<myCanvas.width){
+		  if(cellule[j][i].live==true){
+			//die caused by starvation or die caused by overcrowding
+			  console.log(check_neighbours_state(cellule_avant,j,i))
+				if(check_neighbours_state(cellule_avant,j,i)<2 || check_neighbours_state(cellule_avant,j,i)>3)
+				   { console.log("die")
+				  cellule[j][i].live=false }
+			/*
+			   if(check_neighbours_state(cellule_avant,j,i)>3)
+				console.log("die")
+				cellule[j][i].live=false */
+				if(check_neighbours_state(cellule_avant,j,i)==3||check_neighbours_state(cellule_avant,j,i)==2)
+				cellule[j][i].live=true  
+		  }
+		  else
+		  {
+		   if(check_neighbours_state(cellule_avant,j,i)==3)
+				cellule[j][i].live=true       
+		  }
+		  j+=5
+		}
+		i+=5
+	  }
+	  startGame()
+
+}
+   </script>
+
+
+  </body>
+  </html>
